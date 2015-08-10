@@ -22,8 +22,8 @@ class BuildRunner
     end
     raise
   rescue => e
-    commit_status.set_internal_error(e)
-    raise e
+    commit_status.set_internal_error
+    raise
   end
 
   private
