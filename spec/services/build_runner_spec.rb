@@ -262,13 +262,31 @@ describe BuildRunner, '#run' do
       expect(Resque).not_to have_received(:enqueue)
     end
 
+    it "will set commit status to failed" do
+      repo = create(:repo, :active)
+      build_runner = make_build_runner(repo: repo)
+      github_api = stubbed_github_api
+      force_fail_build_creation
+
+      expect { build_runner.run }.to raise_error ActiveRecord::StatementInvalid
+
+      expect(github_api).to have_received(:create_error_status).with(
+        repo.name,
+        "somesha",
+        I18n.t(:hound_error_status)
+      )
+    end
+
     def force_fail_build_creation
       allow(SecureRandom).to receive(:uuid)
     end
   end
 
   def make_build_runner(repo: create(:repo, :active))
-    payload = stubbed_payload(github_repo_id: repo.github_id)
+    payload = stubbed_payload(
+      github_repo_id: repo.github_id,
+      full_repo_name: repo.name
+    )
     BuildRunner.new(payload)
   end
 

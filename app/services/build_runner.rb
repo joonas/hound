@@ -21,6 +21,9 @@ class BuildRunner
       remove_repo_from_user
     end
     raise
+  rescue => e
+    commit_status.set_internal_error(e)
+    raise e
   end
 
   private
