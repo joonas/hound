@@ -273,7 +273,7 @@ describe BuildRunner, '#run' do
       expect(github_api).to have_received(:create_error_status).with(
         repo.name,
         "somesha",
-        I18n.t(:hound_error_status)
+        I18n.t(:hound_error_status),
       )
     end
 
@@ -285,7 +285,7 @@ describe BuildRunner, '#run' do
   def make_build_runner(repo: create(:repo, :active))
     payload = stubbed_payload(
       github_repo_id: repo.github_id,
-      full_repo_name: repo.name
+      full_repo_name: repo.name,
     )
     BuildRunner.new(payload)
   end
