@@ -15,7 +15,8 @@ en:
     "Error parsing config file: %{filename}. Click \"details\" for
     assistance."
   hound_error_status:
-    "Something went wrong"
+    "We've encountered an error while reviewing your code. Please email hound@thoughtbot.com
+    assistance."
 
   account:
     bulk_pricing:
