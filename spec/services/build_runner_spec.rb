@@ -78,7 +78,7 @@ describe BuildRunner do
         payload = stubbed_payload(
           github_repo_id: repo.github_id,
           full_repo_name: "test/repo",
-          head_sha: "headsha"
+          head_sha: "headsha",
         )
         build_runner = BuildRunner.new(payload)
         stubbed_pull_request
@@ -128,7 +128,7 @@ describe BuildRunner do
         expect(owner_attributes).to eq(
           "name" => owner_name,
           "github_id" => owner_github_id,
-          "organization" => true
+          "organization" => true,
         )
         expect(repo.reload.owner).to eq Owner.first
       end
@@ -143,7 +143,7 @@ describe BuildRunner do
         build_runner = BuildRunner.new(payload)
         pull_request = stubbed_pull_request_with_file("random.js", "")
         style_checker = stubbed_style_checker_with_invalid_javascript_config(
-          pull_request
+          pull_request,
         )
         allow(build_runner).to receive(:style_checker).and_return(style_checker)
         allow(build_runner).to receive(:pull_request).and_return(pull_request)
@@ -154,8 +154,10 @@ describe BuildRunner do
         expect(github_api).to have_received(:create_error_status).with(
           "test/repo",
           "headsha",
-          I18n.t(:config_error_status, filename: "javascript.json"),
-          configuration_url
+          I18n.t(
+            :config_error_status,
+            filename: "javascript.json"
+          ), configuration_url
         )
       end
     end
@@ -191,7 +193,7 @@ describe BuildRunner do
         create(:subscription, repo: repo)
         payload = stubbed_payload(
           github_repo_id: repo.github_id,
-          full_repo_name: repo.name
+          full_repo_name: repo.name,
         )
         build_runner = BuildRunner.new(payload)
         stubbed_style_checker_with_violations
