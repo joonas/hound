@@ -156,7 +156,7 @@ describe BuildRunner do
           "headsha",
           I18n.t(
             :config_error_status,
-            filename: "javascript.json"
+            filename: "javascript.json",
           ), configuration_url
         )
       end
@@ -269,6 +269,122 @@ describe BuildRunner do
         allow(SecureRandom).to receive(:uuid)
       end
     end
+    def stubbed_style_checker_with_violations
+      stubbed_style_checker(violations: [build(:violation)])
+    end
+
+    def stubbed_style_checker(violations:)
+      file_review = build(:file_review, :completed, violations: violations)
+      style_checker = double("StyleChecker", file_reviews: [file_review])
+      allow(StyleChecker).to receive(:new).and_return(style_checker)
+
+      style_checker
+    end
+
+    def stubbed_commenter
+      commenter = double(:commenter).as_null_object
+      allow(Commenter).to receive(:new).and_return(commenter)
+
+      commenter
+    end
+
+    def stubbed_pull_request(files = [double("CommitFile")])
+      head_commit = double(
+        "HeadCommit",
+        sha: "headsha",
+        repo_name: "test/repo",
+        file_content: "",
+      )
+      pull_request = double(
+        "PullRequest",
+        commit_files: files,
+        config: double(:config),
+        opened?: true,
+        head_commit: head_commit,
+        repository_owner_name: "test",
+      )
+      allow(PullRequest).to receive(:new).and_return(pull_request)
+
+      pull_request
+    end
+
+    def stubbed_pull_request_with_file(filename, file_content)
+      commit_file = commit_file_stub(filename, file_content)
+      stubbed_pull_request([commit_file])
+    end
+
+    def commit_file_stub(filename, file_content)
+      double(
+        "CommitFile",
+        filename: filename,
+        content: file_content,
+        removed?: false,
+        sha: "abcd1234",
+        pull_request_number: 1,
+        patch: "sometext",
+      )
+    end
+
+    def stubbed_style_checker_with_config_file(pull_request, filename, content)
+      config = config_for_file(filename, content)
+      style_checker = StyleChecker.new(pull_request)
+      allow(style_checker).to receive(:config).and_return(config)
+
+      style_checker
+    end
+
+    def stubbed_style_checker_with_invalid_javascript_config(pull_request)
+      stubbed_style_checker_with_config_file(
+        pull_request,
+        "javascript.json",
+        invalid_json,
+      )
+    end
+
+    def invalid_json
+      <<-EOS.strip_heredoc
+      {
+        "predef": ["myGlobal",]
+      }
+      EOS
+    end
+
+    def stub_commit(configuration)
+      commit = double("Commit")
+      hound_config = configuration.delete(:hound_config)
+      allow(commit).to receive(:file_content)
+      allow(commit).to receive(:file_content).
+        with(RepoConfig::HOUND_CONFIG).and_return(hound_config)
+      stub_configuration_for_commit(configuration, commit)
+
+      commit
+    end
+
+    def stub_configuration_for_commit(configuration, commit)
+      configuration.each do |filename, contents|
+        allow(commit).to receive(:file_content).
+          with(filename).and_return(contents)
+      end
+    end
+
+    def config_for_file(file_path, content)
+      hound_config = <<-EOS.strip_heredoc
+      java_script:
+        enabled: true
+        config_file: #{file_path}
+      EOS
+
+      commit = stub_commit(
+        hound_config: hound_config,
+        "#{file_path}" => content,
+      )
+
+      RepoConfig.new(commit)
+    end
+
+    def configuration_url
+      Rails.application.routes.url_helpers.configuration_url(host: ENV["HOST"])
+    end
   end
 
   describe "#set_internal_error" do
@@ -309,86 +425,6 @@ describe BuildRunner do
     double("Payload", defaults.merge(options))
   end
 
-  def stubbed_style_checker_with_violations
-    stubbed_style_checker(violations: [build(:violation)])
-  end
-
-  def stubbed_style_checker(violations:)
-    file_review = build(:file_review, :completed, violations: violations)
-    style_checker = double("StyleChecker", file_reviews: [file_review])
-    allow(StyleChecker).to receive(:new).and_return(style_checker)
-
-    style_checker
-  end
-
-  def stubbed_commenter
-    commenter = double(:commenter).as_null_object
-    allow(Commenter).to receive(:new).and_return(commenter)
-
-    commenter
-  end
-
-  def stubbed_pull_request(files = [double("CommitFile")])
-    head_commit = double(
-      "HeadCommit",
-      sha: "headsha",
-      repo_name: "test/repo",
-      file_content: "",
-    )
-    pull_request = double(
-      "PullRequest",
-      commit_files: files,
-      config: double(:config),
-      opened?: true,
-      head_commit: head_commit,
-      repository_owner_name: "test",
-    )
-    allow(PullRequest).to receive(:new).and_return(pull_request)
-
-    pull_request
-  end
-
-  def stubbed_pull_request_with_file(filename, file_content)
-    commit_file = commit_file_stub(filename, file_content)
-    stubbed_pull_request([commit_file])
-  end
-
-  def commit_file_stub(filename, file_content)
-    double(
-      "CommitFile",
-      filename: filename,
-      content: file_content,
-      removed?: false,
-      sha: "abcd1234",
-      pull_request_number: 1,
-      patch: "sometext",
-    )
-  end
-
-  def stubbed_style_checker_with_config_file(pull_request, filename, content)
-    config = config_for_file(filename, content)
-    style_checker = StyleChecker.new(pull_request)
-    allow(style_checker).to receive(:config).and_return(config)
-
-    style_checker
-  end
-
-  def stubbed_style_checker_with_invalid_javascript_config(pull_request)
-    stubbed_style_checker_with_config_file(
-      pull_request,
-      "javascript.json",
-      invalid_json
-    )
-  end
-
-  def invalid_json
-    <<-EOS.strip_heredoc
-      {
-        "predef": ["myGlobal",]
-      }
-    EOS
-  end
-
   def stubbed_github_api
     github_api = double(
       "GithubApi",
@@ -399,42 +435,5 @@ describe BuildRunner do
     allow(GithubApi).to receive(:new).and_return(github_api)
 
     github_api
-  end
-
-  def stub_commit(configuration)
-    commit = double("Commit")
-    hound_config = configuration.delete(:hound_config)
-    allow(commit).to receive(:file_content)
-    allow(commit).to receive(:file_content).
-      with(RepoConfig::HOUND_CONFIG).and_return(hound_config)
-    stub_configuration_for_commit(configuration, commit)
-
-    commit
-  end
-
-  def stub_configuration_for_commit(configuration, commit)
-    configuration.each do |filename, contents|
-      allow(commit).to receive(:file_content).
-        with(filename).and_return(contents)
-    end
-  end
-
-  def config_for_file(file_path, content)
-    hound_config = <<-EOS.strip_heredoc
-      java_script:
-        enabled: true
-        config_file: #{file_path}
-    EOS
-
-    commit = stub_commit(
-      hound_config: hound_config,
-      "#{file_path}" => content
-    )
-
-    RepoConfig.new(commit)
-  end
-
-  def configuration_url
-    Rails.application.routes.url_helpers.configuration_url(host: ENV["HOST"])
   end
 end
