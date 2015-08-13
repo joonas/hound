@@ -18,4 +18,8 @@ class ApplicationJob < ActiveJob::Base
       retry_job
     end
   end
+
+  def after_retry_exhausted
+    # noop
+  end
 end

@@ -69,5 +69,7 @@ describe Retryable do
 
       expect(job).to have_received(:retry_job).with(wait: 10)
     end
+
+    it "calls after_retry_exhausted if exists"
   end
 end
