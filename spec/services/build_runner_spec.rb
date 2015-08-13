@@ -9,7 +9,7 @@ describe BuildRunner do
           github_repo_id: repo.github_id,
           pull_request_number: 5,
           head_sha: "123abc",
-          full_repo_name: repo.name
+          full_repo_name: repo.name,
         )
         build_runner = BuildRunner.new(payload)
         stubbed_style_checker_with_violations
@@ -138,7 +138,7 @@ describe BuildRunner do
         payload = stubbed_payload(
           github_repo_id: repo.github_id,
           full_repo_name: "test/repo",
-          head_sha: "headsha"
+          head_sha: "headsha",
         )
         build_runner = BuildRunner.new(payload)
         pull_request = stubbed_pull_request_with_file("random.js", "")
