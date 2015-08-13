@@ -2,8 +2,8 @@ require "rails_helper"
 
 describe BuildRunner do
   describe "#run" do
-    context 'with active repo and opened pull request' do
-      it 'creates a build record with violations' do
+    context "with active repo and opened pull request" do
+      it "creates a build record with violations" do
         repo = create(:repo, :active)
         payload = stubbed_payload(
           github_repo_id: repo.github_id,
@@ -45,7 +45,7 @@ describe BuildRunner do
         )
       end
 
-      it 'initializes StyleChecker with modified files and config' do
+      it "initializes StyleChecker with modified files and config" do
         build_runner = make_build_runner
         pull_request = stubbed_pull_request
         stubbed_style_checker_with_violations
@@ -57,7 +57,7 @@ describe BuildRunner do
         expect(StyleChecker).to have_received(:new).with(pull_request)
       end
 
-      it 'initializes PullRequest with payload and Hound token' do
+      it "initializes PullRequest with payload and Hound token" do
         repo = create(:repo, :active)
         user = create(:user, token: "user_token")
         user.repos << repo
