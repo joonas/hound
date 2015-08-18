@@ -89,7 +89,7 @@ describe Retryable do
 
         expect { job.perform_now }.to raise_error
 
-        expect(ExhaustedJob.exhausted).to be_truthy
+        expect(job.class.exhausted).to be_truthy
       end
     end
 
