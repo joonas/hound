@@ -22,10 +22,10 @@ describe Retryable do
   end
 
   context "a failing job" do
-    class RetryableFailingJob < ActiveJob::Base
+    class ParentJob < ActiveJob::Base
       include Retryable
 
-      cattr_accessor :counter
+      cattr_accessor :counter, :exhausted
 
       def perform
         self.counter ||= 0
@@ -34,6 +34,15 @@ describe Retryable do
         if self.counter < 3
           raise
         end
+      end
+    end
+
+    class RetryableFailingJob < ParentJob
+    end
+
+    class ExhaustedJob < ParentJob
+      def after_retry_exhausted
+        self.exhausted = true
       end
     end
 
@@ -70,6 +79,27 @@ describe Retryable do
       expect(job).to have_received(:retry_job).with(wait: 10)
     end
 
-    it "calls after_retry_exhausted if exists"
+    context "when `after_retry_exhausted` exists" do
+      it "calls `after_retry_exhausted` after retrying" do
+        allow(Retryable).to receive(:retry_attempts).and_return(1)
+        job = ExhaustedJob.new
+        allow(job).to receive(:after_retry_exhausted).and_return(true)
+
+        expect { job.perform_now }.to raise_error
+
+        expect(ExhaustedJob.exhausted).to be_truthy
+      end
+    end
+
+    context "when `after_retry_exhausted` does not exists" do
+      it "does not call it" do
+        allow(Retryable).to receive(:retry_attempts).and_return(1)
+        job = RetryableFailingJob.new
+
+        expect { job.perform_now }.to raise_error
+
+        expect(RetryableFailingJob.exhausted).to be_falsy
+      end
+    end
   end
 end
