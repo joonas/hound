@@ -25,7 +25,7 @@ describe Buildable do
     end
   end
 
-  describe "after_retry_exhausted" do
+  describe "#after_retry_exhausted" do
     it "sets internal server error on github" do
       build_runner = double(:build_runner, set_internal_error: nil)
       payload = double("Payload")
