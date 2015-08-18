@@ -25,13 +25,15 @@ describe Retryable do
     class ParentJob < ActiveJob::Base
       include Retryable
 
-      cattr_accessor :counter, :exhausted
+      class << self
+        attr_accessor :exhausted, :counter
+      end
 
       def perform
-        self.counter ||= 0
-        self.counter += 1
+        self.class.counter ||= 0
+        self.class.counter += 1
 
-        if self.counter < 3
+        if self.class.counter < 3
           raise
         end
       end
@@ -42,7 +44,7 @@ describe Retryable do
 
     class ExhaustedJob < ParentJob
       def after_retry_exhausted
-        self.exhausted = true
+        self.class.exhausted = true
       end
     end
 
@@ -98,7 +100,7 @@ describe Retryable do
 
         expect { job.perform_now }.to raise_error
 
-        expect(RetryableFailingJob.exhausted).to be_falsy
+        expect(RetryableFailingJob.exhausted).to be nil
       end
     end
   end
