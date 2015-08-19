@@ -87,6 +87,21 @@ describe StyleGuide::CoffeeScript do
       end
     end
 
+    context "with thoughtbot configuration" do
+      context "for an empty function" do
+        it "returns a file review without any violations" do
+          code = <<-CODE.strip_heredoc
+            class FooBar
+              foo: ->
+          CODE
+
+          violations = violations_in(code, repository_owner_name: "thoughtbot")
+
+          expect(violations).not_to be_any { |m| m =~ /Empty function/ }
+        end
+      end
+    end
+
     context "with violation on unchanged line" do
       it "finds no violations" do
         file = double(
