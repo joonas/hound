@@ -7,7 +7,7 @@ require "app/models/github_user"
 describe GithubApi do
   describe "#repos" do
     it "fetches all repos from Github" do
-      token = "something"
+      token = Hound::HOUND_GITHUB_TOKEN
       api = GithubApi.new(token)
       stub_repos_requests(token)
 
@@ -22,7 +22,7 @@ describe GithubApi do
       it "requests file content once" do
         client = double("Octokit::Client", contents: "filecontent")
         allow(Octokit::Client).to receive(:new).and_return(client)
-        token = "authtoken"
+        token = Hound::HOUND_GITHUB_TOKEN
         github = GithubApi.new(token)
         repo = "jimtom/wow"
         filename = ".hound.yml"
@@ -50,7 +50,7 @@ describe GithubApi do
     context "when hook does not exist" do
       it "creates pull request web hook" do
         callback_endpoint = "http://example.com"
-        token = "something"
+        token = Hound::HOUND_GITHUB_TOKEN
         api = GithubApi.new(token)
         request = stub_hook_creation_request(
           full_repo_name,
@@ -65,7 +65,7 @@ describe GithubApi do
 
       it "yields hook" do
         callback_endpoint = "http://example.com"
-        token = "something"
+        token = Hound::HOUND_GITHUB_TOKEN
         api = GithubApi.new(token)
         request = stub_hook_creation_request(
           full_repo_name,
@@ -87,7 +87,7 @@ describe GithubApi do
       it "does not raise" do
         callback_endpoint = "http://example.com"
         stub_failed_hook_creation_request(full_repo_name, callback_endpoint)
-        api = GithubApi.new(Hound::GITHUB_TOKEN)
+        api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
 
         expect do
           api.create_hook(full_repo_name, callback_endpoint)
@@ -97,7 +97,7 @@ describe GithubApi do
       it "returns true" do
         callback_endpoint = "http://example.com"
         stub_failed_hook_creation_request(full_repo_name, callback_endpoint)
-        api = GithubApi.new(Hound::GITHUB_TOKEN)
+        api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
 
         expect(api.create_hook(full_repo_name, callback_endpoint)).to eq true
       end
@@ -108,7 +108,7 @@ describe GithubApi do
     it "removes pull request web hook" do
       hook_id = "123"
       stub_hook_removal_request(full_repo_name, hook_id)
-      api = GithubApi.new(Hound::GITHUB_TOKEN)
+      api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
 
       response = api.remove_hook(full_repo_name, hook_id)
 
@@ -118,7 +118,7 @@ describe GithubApi do
     it "yields given block" do
       hook_id = "123"
       stub_hook_removal_request(full_repo_name, hook_id)
-      api = GithubApi.new(Hound::GITHUB_TOKEN)
+      api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
       yielded = false
 
       api.remove_hook(full_repo_name, hook_id) do
@@ -131,7 +131,7 @@ describe GithubApi do
 
   describe "#pull_request_files" do
     it "returns changed files in a pull request" do
-      api = GithubApi.new(Hound::GITHUB_TOKEN)
+      api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
       pull_request = double("PullRequest", full_repo_name: full_repo_name)
       pr_number = 123
       commit_sha = "abc123"
@@ -180,7 +180,7 @@ describe GithubApi do
 
   describe "#pull_request_comments" do
     it "returns comments added to pull request" do
-      api = GithubApi.new(Hound::GITHUB_TOKEN)
+      api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
       pull_request = double("PullRequest", full_repo_name: full_repo_name)
       pull_request_id = 253
       commit_sha = "abc253"
@@ -206,7 +206,7 @@ describe GithubApi do
 
   describe "#accept_pending_invitations" do
     it "finds and accepts pending org invitations" do
-      api = GithubApi.new(Hound::GITHUB_TOKEN)
+      api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
       memberships_request = stub_memberships_request
       membership_update_request = stub_membership_update_request
 
@@ -222,7 +222,7 @@ describe GithubApi do
       teams = ["thoughtbot"]
       client = double(user_teams: teams)
       allow(Octokit::Client).to receive(:new).and_return(client)
-      api = GithubApi.new(Hound::GITHUB_TOKEN)
+      api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
 
       user_teams = api.user_teams
 
@@ -232,7 +232,7 @@ describe GithubApi do
 
   describe "#create_pending_status" do
     it "makes request to GitHub for creating a pending status" do
-      api = GithubApi.new(Hound::GITHUB_TOKEN)
+      api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
       request = stub_status_request(
         "test/repo",
         "sha",
@@ -248,7 +248,7 @@ describe GithubApi do
     describe "when setting the status returns 404" do
       it "does not crash" do
         sha = "abc"
-        api = GithubApi.new(Hound::GITHUB_TOKEN)
+        api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
         stub_failed_status_creation_request(
           full_repo_name,
           sha,
@@ -265,7 +265,7 @@ describe GithubApi do
 
   describe "#create_success_status" do
     it "makes request to GitHub for creating a success status" do
-      api = GithubApi.new(Hound::GITHUB_TOKEN)
+      api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
       request = stub_status_request(
         "test/repo",
         "sha",
@@ -281,7 +281,7 @@ describe GithubApi do
 
   describe "#create_error_status" do
     it "makes request to GitHub for creating an error status" do
-      api = GithubApi.new(Hound::GITHUB_TOKEN)
+      api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
       request = stub_status_request(
         "test/repo",
         "sha",
@@ -297,7 +297,7 @@ describe GithubApi do
 
   describe "#add_user_to_team" do
     it "makes a request to GitHub" do
-      token = "some_token"
+      token = Hound::HOUND_GITHUB_TOKEN
       username = "houndci"
       team_id = 123
       api = GithubApi.new(token)
@@ -311,7 +311,7 @@ describe GithubApi do
 
   describe "#add_repo_to_team" do
     it "makes a request to GitHub" do
-      token = "some_token"
+      token = Hound::HOUND_GITHUB_TOKEN
       team_id = 123
       api = GithubApi.new(token)
       request = stub_add_repo_to_team_request(full_repo_name, team_id, token)
@@ -324,7 +324,7 @@ describe GithubApi do
 
   describe "#create_team" do
     it "makes a request to GitHub" do
-      token = "some_token"
+      token = Hound::HOUND_GITHUB_TOKEN
       org_name = "foo"
       team_name = "TestTeam"
       api = GithubApi.new(token)
@@ -360,7 +360,7 @@ describe GithubApi do
   describe "#update_team" do
     it "makes a request" do
       team_id = 123
-      api = GithubApi.new(Hound::GITHUB_TOKEN)
+      api = GithubApi.new(Hound::HOUND_GITHUB_TOKEN)
       request = stub_update_team_permission_request(team_id)
 
       api.update_team(team_id, permissions: "push")

@@ -5,6 +5,7 @@ require "byebug"
 require "webmock/rspec"
 require "active_support"
 require "active_support/core_ext"
+require "config/initializers/constants"
 
 Dir["spec/support/**/*.rb"].each { |f| require f }
 

@@ -40,7 +40,7 @@ describe BuildRunner, '#run' do
       expect(BuildReport).to have_received(:run).with(
         build: Build.last,
         pull_request: pull_request,
-        token: Hound::GITHUB_TOKEN,
+        token: Hound::HOUND_GITHUB_TOKEN,
       )
     end
 
